@@ -1,0 +1,50 @@
+{
+    "name": "laxity7/phpmoney",
+    "description": "Correct work with money (fiat and crypto) in PHP",
+    "license": "MIT",
+    "homepage": "https://github.com/laxity7/phpmoney",
+    "minimum-stability": "stable",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Vlad Varlamov",
+            "email": "vlad@varlamov.dev",
+            "homepage": "https://varlamov.dev/"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/laxity7/phpmoney/issues",
+        "source": "https://github.com/laxity7/phpmoney"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laxity7\\Money\\": "src"
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "require": {
+        "php": ">=7.4|>=8.0",
+        "ext-json": "*",
+        "ext-bcmath": "*",
+        "symfony/polyfill-php80": "^1.22"
+    },
+    "require-dev": {
+        "php": ">=8.1",
+        "phpunit/phpunit": "^10.3"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Laxity7\\Money\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "tests": [
+            "phpunit"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
