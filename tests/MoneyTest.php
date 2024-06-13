@@ -226,20 +226,52 @@ final class MoneyTest extends TestCase
         $result = $money->multiply(9);
         $this->assertSame('9', $result->getAmount());
 
+        $money = new Money(1.44, 'USD');
+        $result = $money->multiply(2);
+        $this->assertSame('2.88', $result->getAmount());
+
+        $money = new Money(1.45, 'USD');
+        $result = $money->multiply(2);
+        $this->assertSame('2.9', $result->getAmount());
+
+        $money = new Money(1.455, 'USD');
+        $result = $money->multiply(2);
+        $this->assertSame('2.92', $result->getAmount());
+
+        $money = new Money(99.99, 'USD');
+        $result = $money->multiply(1 / 99.99);
+        $this->assertSame('1', $result->getAmount());
+
+        $money = new Money(99.99, 'USD');
+        $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
+        $this->assertSame('1', $result->getAmount());
+
+        $money = new Money(99.98, 'USD');
+        $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.99', $result->getAmount());
+
+        $money = new Money(-99.98, 'USD');
+        $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
+        $this->assertSame('-0.99', $result->getAmount());
+
+        $money = new Money(99.99, 'USD');
+        $result = $money->multiply(1 / 99.99);
+        $this->assertSame('1', $result->getAmount());
+
+        $money = new Money(-99.99, 'USD');
+        $result = $money->multiply(1 / 99.99);
+        $this->assertSame('-1', $result->getAmount());
+
         $money = new Money('999.99999999', 'BTC');
         $result = $money->multiply(2);
         $this->assertSame('1999.99999998', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
+        $result = $money->multiply(2, PHP_ROUND_HALF_UP);
+        $this->assertSame('1999.99999998', $result->getAmount());
+
+        $money = new Money('999.99999999', 'BTC');
         $result = $money->multiply(2, PHP_ROUND_HALF_DOWN);
-        $this->assertSame('1999.99999998', $result->getAmount());
-
-        $money = new Money('999.99999999', 'BTC');
-        $result = $money->multiply(2, PHP_ROUND_HALF_EVEN);
-        $this->assertSame('1999.99999998', $result->getAmount());
-
-        $money = new Money('999.99999999', 'BTC');
-        $result = $money->multiply(2, PHP_ROUND_HALF_ODD);
         $this->assertSame('1999.99999998', $result->getAmount());
 
         $money = new Money('0.00000001', 'BTC');
@@ -250,13 +282,37 @@ final class MoneyTest extends TestCase
         $result = $money->multiply(4.0004);
         $this->assertSame('0.0040004', $result->getAmount());
 
-        $money = new Money('4.4', 'BTC');
-        $result = $money->multiply(0.00000001, PHP_ROUND_HALF_UP);
-        $this->assertSame('0.00000005', $result->getAmount());
+        $money = new Money('4', 'BTC');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('4.4', 'BTC');
-        $result = $money->multiply(0.00000001, PHP_ROUND_HALF_DOWN);
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
         $this->assertSame('0.00000004', $result->getAmount());
+
+        $money = new Money('4.5', 'BTC');
+        $result = $money->multiply(0.0000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000045', $result->getAmount());
+
+        $money = new Money('4.5', 'BTC');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000004', $result->getAmount());
+
+        $money = new Money('4.5', 'BTC');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000004', $result->getAmount());
+
+        $money = new Money('4.6', 'BTC');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000005', $result->getAmount());
+
+        $money = new Money('4.9', 'BTC');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000005', $result->getAmount());
+
+        $money = new Money('4.9', 'BTC');
+        $result = $money->multiply(0.00000001);
+        $this->assertSame('0.00000005', $result->getAmount());
     }
 
     public function testDivide(): void
@@ -269,9 +325,33 @@ final class MoneyTest extends TestCase
         $result = $money->divide(2);
         $this->assertSame('500', $result->getAmount());
 
+        $money = new Money('999.99999999', 'BTC');
+        $result = $money->divide(2, Money::ROUND_HALF_DOWN);
+        $this->assertSame('499.99999999', $result->getAmount());
+
+        $money = new Money('999.99999998', 'BTC');
+        $result = $money->divide(2);
+        $this->assertSame('499.99999999', $result->getAmount());
+
         $money = new Money('0.00000004', 'BTC');
         $result = $money->divide(4);
         $this->assertSame('0.00000001', $result->getAmount());
+
+        $money = new Money('0.00000004', 'BTC');
+        $result = $money->divide(4, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000001', $result->getAmount());
+
+        $money = new Money('0.00000005', 'BTC');
+        $result = $money->divide(2, Money::ROUND_HALF_DOWN);
+        $this->assertSame('0.00000002', $result->getAmount());
+
+        $money = new Money('0.00000005', 'BTC');
+        $result = $money->divide(2, Money::ROUND_HALF_UP);
+        $this->assertSame('0.00000003', $result->getAmount());
+
+        $money = new Money('0.0000005', 'BTC');
+        $result = $money->divide(2, Money::ROUND_HALF_UP);
+        $this->assertSame('0.00000025', $result->getAmount());
     }
 
     public function testIsZero(): void
@@ -316,6 +396,9 @@ final class MoneyTest extends TestCase
         $this->assertSame('0 USD', $money->toString());
 
         $money = new Money(10.04000001, 'USD');
+        $this->assertSame('10.04 USD', $money->toString());
+
+        $money = new Money(10.04000009, 'USD');
         $this->assertSame('10.04 USD', $money->toString());
 
         $money = new Money(0.0, 'USDT');

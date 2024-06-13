@@ -35,8 +35,9 @@ use Stringable;
  */
 class Money implements JsonSerializable, Stringable
 {
-    public const ROUND_UP = PHP_ROUND_HALF_UP;
-    public const ROUND_DOWN = PHP_ROUND_HALF_DOWN;
+    public const ROUND_HALF_UP = PHP_ROUND_HALF_UP;
+    public const ROUND_HALF_DOWN = PHP_ROUND_HALF_DOWN;
+    private const SCALE = PHP_FLOAT_DIG - 1;
 
     private string $amount;
     private Currency $currency;
@@ -157,9 +158,9 @@ class Money implements JsonSerializable, Stringable
      * @param int|float $multiplier Множитель
      * @param int{self::ROUND_*} $roundingMode Режим округления
      */
-    final public function multiply(float $multiplier, int $roundingMode = self::ROUND_UP): self
+    final public function multiply(float $multiplier, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcmul($this->amount, (string)$multiplier, $this->scale + 1);
+        $value = bcmul($this->amount, $this->floatToString($multiplier, self::SCALE), self::SCALE);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -171,9 +172,9 @@ class Money implements JsonSerializable, Stringable
      * @param int|float $divisor Делитель
      * @param int{self::ROUND_*} $roundingMode Режим округления
      */
-    final public function divide(float $divisor, int $roundingMode = self::ROUND_UP): self
+    final public function divide(float $divisor, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcdiv($this->amount, (string)$divisor, $this->scale + 1);
+        $value = bcdiv($this->amount, $this->floatToString($divisor, self::SCALE), self::SCALE);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -226,9 +227,13 @@ class Money implements JsonSerializable, Stringable
     /**
      * Получить объект в виде строки в формате "сумма валюта".
      */
-    final public function toString(): string
+    final public function toString(bool $trimZero = true): string
     {
-        return $this->getAmount() . ' ' . $this->getCurrency()->getCode();
+        if ($trimZero) {
+            return $this->getAmount() . ' ' . $this->getCurrency()->getCode();
+        }
+
+        return $this->amount . ' ' . $this->getCurrency()->getCode();
     }
 
     final public function __toString(): string
@@ -244,26 +249,43 @@ class Money implements JsonSerializable, Stringable
         ];
     }
 
+    private function getFractionalCount(string $value): int
+    {
+        return strlen($this->getFractionalPart($value));
+    }
+
+    private function getFractionalPart(string $value): string
+    {
+        return explode('.', rtrim($value, 0))[1];
+    }
+
+    private function getIntegerPart(string $value): string
+    {
+        return explode('.', $value)[0];
+    }
+
+    private function getMinimalFractionalUnit(string $value): string
+    {
+        if ($this->getFractionalCount($value) === 0) {
+            return '0';
+        }
+
+        $unit = '0.' . str_repeat('0', $this->getFractionalCount($value) - 1) . '1';
+        if ($value[0] === '-') {
+            $unit = '-' . $unit;
+        }
+
+        return $unit;
+    }
+
     private function roundUp(string $number): string
     {
-        $scale = $this->scale;
-        $lastPosition = strpos($number, '.') + $scale + 1;
-        if (strlen($number) < $lastPosition) {
-            return $number;
-        }
+        $scale = $this->getFractionalCount($number);
 
-        $lastDecimal = (int)$number[$lastPosition];
-        if ($lastDecimal === 0) {
-            return $number;
-        }
+        $adjustment = $this->getMinimalFractionalUnit($number);
+        $number = bcadd($number, $adjustment, self::SCALE);
 
-        // Добавляем малое значение, которое гарантированно изменит восьмую цифру после запятой в большую сторону
-        $adjustment = '0.' . str_repeat('0', $scale - 1) . '1';
-        if ($number[0] === '-') {
-            return bcsub($number, $adjustment, $scale);
-        }
-
-        return bcadd($number, $adjustment, $scale);
+        return $this->floatToString($number, $scale - 1);
     }
 
     private function roundDown(string $number): string
@@ -273,19 +295,32 @@ class Money implements JsonSerializable, Stringable
 
     private function round(string $value, int $roundingMode): string
     {
-        switch ($roundingMode) {
-            case PHP_ROUND_HALF_UP:
-                return $this->roundUp($value);
-            case PHP_ROUND_HALF_DOWN:
-                return $this->roundDown($value);
-            default:
-                return $value;
+        if ($this->scale >= $this->getFractionalCount($value)) {
+            return $value;
         }
+
+        $lastChar = substr($this->getFractionalPart($value), -1);
+        if ($lastChar === '5') {
+            switch ($roundingMode) {
+                case PHP_ROUND_HALF_UP:
+                    $value = $this->roundUp($value);
+                    break;
+                case PHP_ROUND_HALF_DOWN:
+                    $value = $this->roundDown($value);
+                    break;
+            }
+        } elseif ($lastChar > 5) {
+            $value = $this->roundUp($value);
+        }
+
+        return $this->roundDown($value);
     }
 
-    private function floatToString(float $amount): string
+    private function floatToString(float $amount, ?int $scale = null): string
     {
-        return sprintf("%.{$this->scale}F", $amount);
+        $scale ??= $this->scale;
+
+        return sprintf("%.{$scale}F", $amount);
     }
 
     private function newInstance(string $amount): self
