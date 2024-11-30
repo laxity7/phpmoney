@@ -12,7 +12,7 @@ use Laxity7\Money\Test\Stubs\FiatCurrenciesStub;
 use Laxity7\Money\Test\Stubs\MoneyConfigStub;
 use PHPUnit\Framework\TestCase;
 
-class AggregateCurrenciesTest extends TestCase
+final class AggregateCurrenciesTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -26,13 +26,13 @@ class AggregateCurrenciesTest extends TestCase
         $currencies1 = new FiatCurrenciesStub();
         $currencies2 = new CryptoCurrenciesStub();
 
-        $aggregateCurrencies = new AggregateCurrencies([$currencies1, $currencies2]);
+        $aggregateCurrencies = new AggregateCurrencies(...[$currencies1, $currencies2]);
 
-        $this->assertTrue($aggregateCurrencies->contains($currency));
+        self::assertTrue($aggregateCurrencies->contains($currency));
 
         $currency = new Currency('BTC');
 
-        $this->assertTrue($aggregateCurrencies->contains($currency));
+        self::assertTrue($aggregateCurrencies->contains($currency));
     }
 
     public function testContainsReturnsFalse(): void
@@ -41,9 +41,9 @@ class AggregateCurrenciesTest extends TestCase
         $currencies1 = new FiatCurrenciesStub();
         $currencies2 = new CryptoCurrenciesStub();
 
-        $aggregateCurrencies = new AggregateCurrencies([$currencies1, $currencies2]);
+        $aggregateCurrencies = new AggregateCurrencies(...[$currencies1, $currencies2]);
 
-        $this->assertFalse($aggregateCurrencies->contains($currency));
+        self::assertFalse($aggregateCurrencies->contains($currency));
     }
 
     public function testGetDecimalCountReturns(): void
@@ -52,12 +52,12 @@ class AggregateCurrenciesTest extends TestCase
         $currencies1 = new FiatCurrenciesStub();
         $currencies2 = new CryptoCurrenciesStub();
 
-        $aggregateCurrencies = new AggregateCurrencies([$currencies1, $currencies2]);
+        $aggregateCurrencies = new AggregateCurrencies(...[$currencies1, $currencies2]);
 
-        $this->assertEquals(2, $aggregateCurrencies->getDecimalCount($currency));
+        self::assertEquals(2, $aggregateCurrencies->getDecimalCount($currency));
 
         $currency = new Currency('BTC');
-        $this->assertEquals(8, $aggregateCurrencies->getDecimalCount($currency));
+        self::assertEquals(8, $aggregateCurrencies->getDecimalCount($currency));
     }
 
     public function getDecimalCountThrowsExceptionWhenCurrencyIsInNoRepository(): void
@@ -66,7 +66,7 @@ class AggregateCurrenciesTest extends TestCase
         $currencies1 = new FiatCurrenciesStub();
         $currencies2 = new CryptoCurrenciesStub();
 
-        $aggregateCurrencies = new AggregateCurrencies([$currencies1, $currencies2]);
+        $aggregateCurrencies = new AggregateCurrencies(...[$currencies1, $currencies2]);
 
         $this->expectException(UnknownCurrencyException::class);
 
@@ -78,9 +78,9 @@ class AggregateCurrenciesTest extends TestCase
         $currencies1 = new FiatCurrenciesStub();
         $currencies2 = new CryptoCurrenciesStub();
 
-        $aggregateCurrencies = new AggregateCurrencies([$currencies1, $currencies2]);
+        $aggregateCurrencies = new AggregateCurrencies(...[$currencies1, $currencies2]);
 
-        $this->assertCount(8, $aggregateCurrencies);
-        $this->assertContainsOnlyInstancesOf(Currency::class, $aggregateCurrencies->getIterator());
+        self::assertCount(8, $aggregateCurrencies);
+        self::assertContainsOnlyInstancesOf(Currency::class, $aggregateCurrencies->getIterator());
     }
 }

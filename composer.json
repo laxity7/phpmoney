@@ -5,6 +5,7 @@
     "homepage": "https://github.com/laxity7/phpmoney",
     "minimum-stability": "stable",
     "type": "library",
+    "version": "1.0.0",
     "authors": [
         {
             "name": "Vlad Varlamov",
@@ -18,20 +19,18 @@
     },
     "autoload": {
         "psr-4": {
-            "Laxity7\\Money\\": "src"
-        },
-        "exclude-from-classmap": [
-            "/tests/"
-        ]
+            "Laxity7\\Money\\": "./src"
+        }
     },
     "require": {
-        "php": ">=7.4|>=8.0",
-        "ext-json": "*",
+        "php": ">=8.1",
         "ext-bcmath": "*",
-        "symfony/polyfill-php80": "^1.22"
+        "ext-json": "*"
     },
     "require-dev": {
         "php": ">=8.1",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^10.3"
     },
     "autoload-dev": {
@@ -40,11 +39,14 @@
         }
     },
     "scripts": {
-        "tests": [
-            "phpunit"
-        ]
+        "phpunit": "vendor/bin/phpunit --configuration=phpunit.xml",
+        "phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit 1G"
     },
     "config": {
-        "sort-packages": true
+        "apcu-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "discard-changes": true,
+        "optimize-autoloader": true
     }
 }

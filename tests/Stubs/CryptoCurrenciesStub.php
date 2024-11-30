@@ -9,6 +9,9 @@ use Laxity7\Money\Currencies;
 use Laxity7\Money\Currency;
 use Traversable;
 
+/**
+ * @template-implements Currencies<int, Currency>
+ */
 final class CryptoCurrenciesStub implements Currencies
 {
     private const CURRENCIES = [
@@ -36,5 +39,10 @@ final class CryptoCurrenciesStub implements Currencies
                 array_keys(self::CURRENCIES)
             )
         );
+    }
+
+    public function getName(Currency $currency): string
+    {
+        return self::CURRENCIES[$currency->getCode()];
     }
 }

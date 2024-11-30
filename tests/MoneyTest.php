@@ -1,14 +1,16 @@
 <?php
 
-namespace Laxity7\Money\Tests;
+namespace Laxity7\Money\Test;
 
 use InvalidArgumentException;
 use Laxity7\Money\Money;
 use Laxity7\Money\Test\Stubs\MoneyConfigStub;
 use PHPUnit\Framework\TestCase;
 
+use function PHPUnit\Framework\assertSame;
+
 /**
- * @link Money
+ * @covers Money
  */
 final class MoneyTest extends TestCase
 {
@@ -18,164 +20,191 @@ final class MoneyTest extends TestCase
         MoneyConfigStub::configure();
     }
 
+    /**
+     * @covers Money::__construct()
+     */
     public function test__construct(): void
     {
         $money = new Money(1.0, 'USD');
-        $this->assertInstanceOf(Money::class, $money);
-        $this->assertSame('1', $money->getAmount());
+        self::assertInstanceOf(Money::class, $money);
+        self::assertSame('1', $money->getAmount());
 
         $money = new Money(1, 'USDT');
-        $this->assertSame('1', $money->getAmount());
+        self::assertSame('1', $money->getAmount());
 
         $money = new Money(100.0999999, 'ton');
-        $this->assertSame('100.0999999', $money->getAmount());
-        $this->assertEquals('TON', $money->getCurrency());
+        self::assertSame('100.0999999', $money->getAmount());
+        self::assertEquals('TON', $money->getCurrency());
 
         $money = new Money(0.00000001, 'BTC');
-        $this->assertSame('0.00000001', $money->getAmount());
+        self::assertSame('0.00000001', $money->getAmount());
 
         $money = new Money(100.099000, 'ton');
-        $this->assertSame('100.099', $money->getAmount());
+        self::assertSame('100.099', $money->getAmount());
 
         $money = new Money(1000, 'ton');
-        $this->assertSame('1000', $money->getAmount());
+        self::assertSame('1000', $money->getAmount());
     }
 
+    /**
+     * @covers Money::isSameCurrency()
+     */
     public function testIsSameCurrency(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertTrue($money->isSameCurrency($other));
+        self::assertTrue($money->isSameCurrency($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isSameCurrency($other));
+        self::assertFalse($money->isSameCurrency($other));
     }
 
+    /**
+     * @covers Money::isEquals()
+     */
     public function testIsEquals(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertTrue($money->isEquals($other));
+        self::assertTrue($money->isEquals($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isEquals($other));
+        self::assertFalse($money->isEquals($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertFalse($money->isEquals($other));
+        self::assertFalse($money->isEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
-        $this->assertTrue($money->isEquals($other));
+        self::assertTrue($money->isEquals($other));
     }
 
+    /**
+     * @covers Money::isNotEquals()
+     */
     public function testIsNotEquals(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertFalse($money->isNotEquals($other));
+        self::assertFalse($money->isNotEquals($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertTrue($money->isNotEquals($other));
+        self::assertTrue($money->isNotEquals($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertTrue($money->isNotEquals($other));
+        self::assertTrue($money->isNotEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999998, 'BTC');
-        $this->assertTrue($money->isNotEquals($other));
+        self::assertTrue($money->isNotEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
-        $this->assertFalse($money->isNotEquals($other));
+        self::assertFalse($money->isNotEquals($other));
     }
 
+    /**
+     * @covers Money::isGreaterThan()
+     */
     public function testIsGreaterThan(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertFalse($money->isGreaterThan($other));
+        self::assertFalse($money->isGreaterThan($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isGreaterThan($other));
+        self::assertFalse($money->isGreaterThan($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertFalse($money->isGreaterThan($other));
+        self::assertFalse($money->isGreaterThan($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999998, 'BTC');
-        $this->assertTrue($money->isGreaterThan($other));
+        self::assertTrue($money->isGreaterThan($other));
     }
 
+    /**
+     * @covers Money::isLessThan()
+     */
     public function testIsLessThan(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertFalse($money->isLessThan($other));
+        self::assertFalse($money->isLessThan($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isLessThan($other));
+        self::assertFalse($money->isLessThan($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertTrue($money->isLessThan($other));
+        self::assertTrue($money->isLessThan($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999998, 'BTC');
-        $this->assertFalse($money->isLessThan($other));
+        self::assertFalse($money->isLessThan($other));
     }
 
+    /**
+     * @covers Money::isGreaterThanOrEquals()
+     */
     public function testIsGreaterThanOrEquals(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertTrue($money->isGreaterThanOrEquals($other));
+        self::assertTrue($money->isGreaterThanOrEquals($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isGreaterThanOrEquals($other));
+        self::assertFalse($money->isGreaterThanOrEquals($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertFalse($money->isGreaterThanOrEquals($other));
+        self::assertFalse($money->isGreaterThanOrEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999998, 'BTC');
-        $this->assertTrue($money->isGreaterThanOrEquals($other));
+        self::assertTrue($money->isGreaterThanOrEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
-        $this->assertTrue($money->isGreaterThanOrEquals($other));
+        self::assertTrue($money->isGreaterThanOrEquals($other));
     }
 
+    /**
+     * @covers Money::isLessThanOrEquals()
+     */
     public function testIsLessThanOrEquals(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        $this->assertTrue($money->isLessThanOrEquals($other));
+        self::assertTrue($money->isLessThanOrEquals($other));
 
         $other = new Money(1.0, 'USDT');
-        $this->assertFalse($money->isLessThanOrEquals($other));
+        self::assertFalse($money->isLessThanOrEquals($other));
 
         $other = new Money(2.0, 'USD');
-        $this->assertTrue($money->isLessThanOrEquals($other));
+        self::assertTrue($money->isLessThanOrEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999998, 'BTC');
-        $this->assertFalse($money->isLessThanOrEquals($other));
+        self::assertFalse($money->isLessThanOrEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
-        $this->assertTrue($money->isLessThanOrEquals($other));
+        self::assertTrue($money->isLessThanOrEquals($other));
     }
 
+    /**
+     * @covers Money::add()
+     */
     public function testAdd(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
         $result = $money->add($other);
-        $this->assertSame('2', $result->getAmount());
+        self::assertSame('2', $result->getAmount());
 
         $money = new Money('0.00000001', 'BTC');
         $other = new Money('999.99999998', 'BTC');
         $result = $money->add($other);
-        $this->assertSame('999.99999999', $result->getAmount());
+        self::assertSame('999.99999999', $result->getAmount());
 
         $other = new Money(1.0, 'USDT');
         $this->expectException(InvalidArgumentException::class);
@@ -183,29 +212,24 @@ final class MoneyTest extends TestCase
     }
 
     /**
-     * @depends testAdd
+     * @covers Money::subtract()
      */
-    public function testPlus(): void
-    {
-        $this->assertTrue(true);
-    }
-
     public function testSubtract(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
         $result = $money->subtract($other);
-        $this->assertSame('0', $result->getAmount());
+        self::assertSame('0', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $other = new Money('999.99999998', 'BTC');
         $result = $money->subtract($other);
-        $this->assertSame('0.00000001', $result->getAmount());
+        self::assertSame('0.00000001', $result->getAmount());
 
         $money = new Money(0.00000001, 'BTC');
         $other = new Money(0.00000001, 'BTC');
         $result = $money->subtract($other);
-        $this->assertSame('0', $result->getAmount());
+        self::assertSame('0', $result->getAmount());
 
         $other = new Money(1.0, 'USDT');
         $this->expectException(InvalidArgumentException::class);
@@ -213,207 +237,248 @@ final class MoneyTest extends TestCase
     }
 
     /**
-     * @depends testSubtract
+     * @covers Money::multiply()
      */
-    public function testMinus(): void
-    {
-        $this->assertTrue(true);
-    }
-
     public function testMultiply(): void
     {
         $money = new Money(1.0, 'USD');
         $result = $money->multiply(9);
-        $this->assertSame('9', $result->getAmount());
+        self::assertSame('9', $result->getAmount());
 
         $money = new Money(1.44, 'USD');
         $result = $money->multiply(2);
-        $this->assertSame('2.88', $result->getAmount());
+        self::assertSame('2.88', $result->getAmount());
 
         $money = new Money(1.45, 'USD');
         $result = $money->multiply(2);
-        $this->assertSame('2.9', $result->getAmount());
+        self::assertSame('2.9', $result->getAmount());
 
         $money = new Money(1.455, 'USD');
         $result = $money->multiply(2);
-        $this->assertSame('2.92', $result->getAmount());
+        self::assertSame('2.92', $result->getAmount());
 
         $money = new Money(99.99, 'USD');
         $result = $money->multiply(1 / 99.99);
-        $this->assertSame('1', $result->getAmount());
+        self::assertSame('1', $result->getAmount());
 
         $money = new Money(99.99, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
-        $this->assertSame('1', $result->getAmount());
+        self::assertSame('1', $result->getAmount());
 
         $money = new Money(99.98, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.99', $result->getAmount());
+        self::assertSame('0.99', $result->getAmount());
 
         $money = new Money(-99.98, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
-        $this->assertSame('-0.99', $result->getAmount());
+        self::assertSame('-0.99', $result->getAmount());
 
         $money = new Money(99.99, 'USD');
         $result = $money->multiply(1 / 99.99);
-        $this->assertSame('1', $result->getAmount());
+        self::assertSame('1', $result->getAmount());
 
         $money = new Money(-99.99, 'USD');
         $result = $money->multiply(1 / 99.99);
-        $this->assertSame('-1', $result->getAmount());
+        self::assertSame('-1', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $result = $money->multiply(2);
-        $this->assertSame('1999.99999998', $result->getAmount());
+        self::assertSame('1999.99999998', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $result = $money->multiply(2, PHP_ROUND_HALF_UP);
-        $this->assertSame('1999.99999998', $result->getAmount());
+        self::assertSame('1999.99999998', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $result = $money->multiply(2, PHP_ROUND_HALF_DOWN);
-        $this->assertSame('1999.99999998', $result->getAmount());
+        self::assertSame('1999.99999998', $result->getAmount());
 
         $money = new Money('0.00000001', 'BTC');
         $result = $money->multiply(4);
-        $this->assertSame('0.00000004', $result->getAmount());
+        self::assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('0.001', 'BTC');
         $result = $money->multiply(4.0004);
-        $this->assertSame('0.0040004', $result->getAmount());
+        self::assertSame('0.0040004', $result->getAmount());
 
         $money = new Money('4', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000004', $result->getAmount());
+        self::assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('4.4', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000004', $result->getAmount());
+        self::assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('4.5', 'BTC');
         $result = $money->multiply(0.0000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000045', $result->getAmount());
+        self::assertSame('0.00000045', $result->getAmount());
 
         $money = new Money('4.5', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000004', $result->getAmount());
+        self::assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('4.5', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000004', $result->getAmount());
+        self::assertSame('0.00000004', $result->getAmount());
 
         $money = new Money('4.6', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000005', $result->getAmount());
+        self::assertSame('0.00000005', $result->getAmount());
 
         $money = new Money('4.9', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000005', $result->getAmount());
+        self::assertSame('0.00000005', $result->getAmount());
 
         $money = new Money('4.9', 'BTC');
         $result = $money->multiply(0.00000001);
-        $this->assertSame('0.00000005', $result->getAmount());
+        self::assertSame('0.00000005', $result->getAmount());
     }
 
+    /**
+     * @covers Money::divide()
+     */
     public function testDivide(): void
     {
         $money = new Money(9.0, 'USD');
         $result = $money->divide(3);
-        $this->assertSame('3', $result->getAmount());
+        self::assertSame('3', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $result = $money->divide(2);
-        $this->assertSame('500', $result->getAmount());
+        self::assertSame('500', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
         $result = $money->divide(2, Money::ROUND_HALF_DOWN);
-        $this->assertSame('499.99999999', $result->getAmount());
+        self::assertSame('499.99999999', $result->getAmount());
 
         $money = new Money('999.99999998', 'BTC');
         $result = $money->divide(2);
-        $this->assertSame('499.99999999', $result->getAmount());
+        self::assertSame('499.99999999', $result->getAmount());
 
         $money = new Money('0.00000004', 'BTC');
         $result = $money->divide(4);
-        $this->assertSame('0.00000001', $result->getAmount());
+        self::assertSame('0.00000001', $result->getAmount());
 
         $money = new Money('0.00000004', 'BTC');
         $result = $money->divide(4, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000001', $result->getAmount());
+        self::assertSame('0.00000001', $result->getAmount());
 
         $money = new Money('0.00000005', 'BTC');
         $result = $money->divide(2, Money::ROUND_HALF_DOWN);
-        $this->assertSame('0.00000002', $result->getAmount());
+        self::assertSame('0.00000002', $result->getAmount());
 
         $money = new Money('0.00000005', 'BTC');
         $result = $money->divide(2, Money::ROUND_HALF_UP);
-        $this->assertSame('0.00000003', $result->getAmount());
+        self::assertSame('0.00000003', $result->getAmount());
 
         $money = new Money('0.0000005', 'BTC');
         $result = $money->divide(2, Money::ROUND_HALF_UP);
-        $this->assertSame('0.00000025', $result->getAmount());
+        self::assertSame('0.00000025', $result->getAmount());
     }
 
+    /**
+     * @covers Money::isZero()
+     */
     public function testIsZero(): void
     {
         $money = new Money(1.0, 'USD');
-        $this->assertFalse($money->isZero());
+        self::assertFalse($money->isZero());
 
         $money = new Money(0.0, 'USD');
-        $this->assertTrue($money->isZero());
+        self::assertTrue($money->isZero());
 
         $money = new Money(-1.0, 'USD');
-        $this->assertFalse($money->isZero());
+        self::assertFalse($money->isZero());
     }
 
+    /**
+     * @covers Money::isPositive()
+     */
     public function testIsPositive(): void
     {
         $money = new Money(1.0, 'USD');
-        $this->assertTrue($money->isPositive());
+        self::assertTrue($money->isPositive());
 
         $money = new Money(0.0, 'USD');
-        $this->assertFalse($money->isPositive());
+        self::assertFalse($money->isPositive());
 
         $money = new Money(-1.0, 'USD');
-        $this->assertFalse($money->isPositive());
+        self::assertFalse($money->isPositive());
     }
 
+    /**
+     * @covers Money::isNegative()
+     */
     public function testIsNegative(): void
     {
         $money = new Money(1.0, 'USD');
-        $this->assertFalse($money->isNegative());
+        self::assertFalse($money->isNegative());
 
         $money = new Money(0.0, 'USD');
-        $this->assertFalse($money->isNegative());
+        self::assertFalse($money->isNegative());
 
         $money = new Money(-1.0, 'USD');
-        $this->assertTrue($money->isNegative());
+        self::assertTrue($money->isNegative());
     }
 
+    /**
+     * @covers Money::getAmount()
+     */
+    public function testGetAmount(): void
+    {
+        $money = new Money(1.0, 'USD');
+        self::assertSame('1', $money->getAmount());
+
+        $money = new Money(0.0, 'USD');
+        self::assertSame('0', $money->getAmount());
+
+        $money = new Money(-1.0, 'USD');
+        self::assertSame('-1', $money->getAmount());
+
+        $money = new Money(1.00000001, 'USD');
+        self::assertSame('1', $money->getAmount());
+
+        $money = new Money(1.00000009, 'USD');
+        self::assertSame('1', $money->getAmount());
+
+        $money = new Money(1.0000001, 'BTC');
+        self::assertSame('1.0000001', $money->getAmount());
+
+        $money = new Money(1.0090000, 'BTC');
+        self::assertSame('1.009', $money->getAmount());
+    }
+
+    /**
+     * @covers Money::toString()
+     */
     public function testToString(): void
     {
         $money = new Money(0.00000001, 'USD');
-        $this->assertSame('0 USD', $money->toString());
+        self::assertSame('0 USD', $money->toString());
 
         $money = new Money(10.04000001, 'USD');
-        $this->assertSame('10.04 USD', $money->toString());
+        self::assertSame('10.04 USD', $money->toString());
 
         $money = new Money(10.04000009, 'USD');
-        $this->assertSame('10.04 USD', $money->toString());
+        self::assertSame('10.04 USD', $money->toString());
 
         $money = new Money(0.0, 'USDT');
-        $this->assertSame('0 USDT', $money->toString());
+        self::assertSame('0 USDT', $money->toString());
 
         $money = new Money(999.99999999, 'btc');
-        $this->assertSame('999.99999999 BTC', $money->toString());
+        self::assertSame('999.99999999 BTC', $money->toString());
 
         $money = new Money(1.012, 'TON');
-        $this->assertSame('1.012 TON', (string)$money);
+        self::assertSame('1.012 TON', (string)$money);
     }
 
+    /**
+     * @covers Money::jsonSerialize()
+     */
     public function testJsonSerialize(): void
     {
         $money = new Money(1.0, 'usd');
-        $this->assertSame(['amount' => '1', 'currency' => 'USD'], $money->jsonSerialize());
+        self::assertSame(['amount' => '1', 'currency' => 'USD'], $money->jsonSerialize());
+        assertSame('{"amount":"1","currency":"USD"}', json_encode($money));
     }
 }

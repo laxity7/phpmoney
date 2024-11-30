@@ -4,72 +4,45 @@ declare(strict_types=1);
 
 namespace Laxity7\Money\Test;
 
-use Laxity7\Money\Currencies;
-use Laxity7\Money\Currencies\AggregateCurrencies;
+use Laxity7\Money\Exceptions\ConfigAlreadyConfiguredException;
 use Laxity7\Money\MoneyConfig;
-use Laxity7\Money\Test\Stubs\CryptoCurrenciesStub;
 use Laxity7\Money\Test\Stubs\FiatCurrenciesStub;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers \Laxity7\Money\MoneyConfig
+ */
 final class MoneyConfigTest extends TestCase
 {
-    private static Currencies $fiatCurrencies;
-    private static Currencies $cryptoCurrencies;
-
-    protected function setUp(): void
-    {
-        self::$fiatCurrencies ??= new FiatCurrenciesStub();
-        self::$cryptoCurrencies ??= new CryptoCurrenciesStub();
-    }
-
-    public function testGetConfigThrowsExceptionWhenNotConfigured(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('MoneyConfig is not configured.');
-
-        MoneyConfig::getConfig();
-    }
-
+    /**
+     * @covers \Laxity7\Money\MoneyConfig::configure()
+     */
     public function testConfigureCreatesSingletonInstance(): void
     {
-        $config = MoneyConfig::configure(self::$fiatCurrencies, self::$cryptoCurrencies, true);
+        $config = MoneyConfig::configure(new FiatCurrenciesStub(), true);
 
-        $this->assertInstanceOf(MoneyConfig::class, $config);
+        self::assertInstanceOf(MoneyConfig::class, $config);
     }
 
     /**
-     * @depends testConfigureCreatesSingletonInstance
+     * @covers \Laxity7\Money\MoneyConfig::configure()
      */
     public function testConfigureThrowsExceptionWhenAlreadyConfigured(): void
     {
-        $this->expectException(\RuntimeException::class);
+        MoneyConfig::configure(new FiatCurrenciesStub(), true);
+
+        $this->expectException(ConfigAlreadyConfiguredException::class);
         $this->expectExceptionMessage('MoneyConfig is already configured.');
 
-        MoneyConfig::configure(self::$fiatCurrencies, self::$cryptoCurrencies, true);
+        MoneyConfig::configure(new FiatCurrenciesStub(), true);
     }
 
     /**
-     * @depends testConfigureCreatesSingletonInstance
-     */
-    public function testGetFiatCurrencies(): void
-    {
-        $this->assertSame(self::$fiatCurrencies, MoneyConfig::getFiatCurrencies());
-    }
-
-    /**
-     * @depends testConfigureCreatesSingletonInstance
-     */
-    public function testGetCryptoCurrencies(): void
-    {
-        $this->assertSame(self::$cryptoCurrencies, MoneyConfig::getCryptoCurrencies());
-    }
-
-    /**
-     * @depends testConfigureCreatesSingletonInstance
+     * @covers \Laxity7\Money\MoneyConfig::getCurrencies()
      */
     public function testGetCurrencies(): void
     {
-        $this->assertInstanceOf(AggregateCurrencies::class, MoneyConfig::getCurrencies());
+        MoneyConfig::configure(new FiatCurrenciesStub(), true);
+        self::assertInstanceOf(FiatCurrenciesStub::class, MoneyConfig::getCurrencies());
     }
-
 }

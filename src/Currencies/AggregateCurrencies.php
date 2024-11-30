@@ -12,15 +12,17 @@ use Traversable;
 
 /**
  * Aggregates several currency repositories.
+ * @template-implements Currencies<int, Currency>
  */
 final class AggregateCurrencies implements Currencies
 {
-    private array $currencies;
+    /** @var Currencies<int, Currency>[] */
+    private readonly array $currencies;
 
     /**
-     * @param Currencies[] $currencies
+     * @param Currencies<int, Currency> $currencies
      */
-    public function __construct(array $currencies)
+    public function __construct(Currencies ...$currencies)
     {
         $this->currencies = $currencies;
     }
@@ -50,15 +52,26 @@ final class AggregateCurrencies implements Currencies
     /** {@inheritDoc} */
     public function getIterator(): Traversable
     {
-        /** @psalm-var AppendIterator&Traversable<int|string, Currency> $iterator */
+        /** @psalm-var AppendIterator&Currencies<int, Currency>[] $iterator */
         $iterator = new AppendIterator();
 
         foreach ($this->currencies as $currencies) {
             $currencyIterator = $currencies->getIterator();
-            /** @psalm-var AppendIterator&Traversable<int|string, Currency> $currencyIterator */
+            /** @var \Iterator&Currencies<int, Currency> $currencyIterator */
             $iterator->append($currencyIterator);
         }
 
         return $iterator;
+    }
+
+    public function getName(Currency $currency): string
+    {
+        foreach ($this->currencies as $currencies) {
+            if ($currencies->contains($currency)) {
+                return $currencies->getName($currency);
+            }
+        }
+
+        throw new UnknownCurrencyException('Cannot find currency ' . $currency->getCode());
     }
 }

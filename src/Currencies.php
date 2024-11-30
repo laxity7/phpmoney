@@ -9,7 +9,9 @@ use Laxity7\Money\Exceptions\UnknownCurrencyException;
 use Traversable;
 
 /**
- * Implement this to provide a list of currencies.
+ * @template TKey of int
+ * @template-covariant TValue of Currency
+ * @template-extends IteratorAggregate<TKey, TValue>
  */
 interface Currencies extends IteratorAggregate
 {
@@ -20,12 +22,20 @@ interface Currencies extends IteratorAggregate
 
     /**
      * Returns the subunit for a currency.
+     * @return int<0, 14>
      * @throws UnknownCurrencyException
      */
     public function getDecimalCount(Currency $currency): int;
 
     /**
-     * @psalm-return Traversable<int|string, Currency>
+     * Returns the name of a currency.
+     * @return non-empty-string
+     * @throws UnknownCurrencyException
+     */
+    public function getName(Currency $currency): string;
+
+    /**
+     * @return Traversable<int, Currency>
      */
     public function getIterator(): Traversable;
 }

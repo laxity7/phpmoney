@@ -7,16 +7,16 @@ use Laxity7\Money\Exceptions\InvalidArgumentException;
 use Stringable;
 
 /**
- * Класс для корректной работы с деньгами в разных валютах.
+ * Class for proper handling of money in different currencies.
  *
- * Позволяет выполнять арифметические операции с деньгами.
- * Поддерживает операции сравнения.
- * Поддерживает до 8 знаков после запятой, числа получаемые в результате операций с большим количеством округляются до 8 знаков.
- * Поддерживает округление в большую и меньшую сторону (для чисел свыше 8 знаков после запятой).
+ * Allows performing arithmetic operations with money.
+ * Supports comparison operations.
+ * Supports up to 8 decimal places; numbers resulting from operations with more decimals are rounded to 8 places.
+ * Supports rounding up and down (for numbers with more than 8 decimal places).
  *
- * Класс не позволяет выполнять операции с разными валютами.
+ * The class does not allow operations with different currencies.
  *
- * Пример использования:
+ * Example usage:
  *
  * $money1 = new Money(1.0, 'USD');
  * $money2 = new Money(2.0, 'USD');
@@ -30,8 +30,9 @@ use Stringable;
  * $money1->plus($money2); // 3 USD
  * $money2->minus($money1); // 1 USD
  *
- * При вывозе метода getAmount() возвращается строка, в которой удалены незначащие нули после запятой.
- * Метод toString() возвращает строку в формате "сумма валюта", например "1 USD", "0.00000001 BTC".
+ * When calling the getAmount() method, it returns a string with trailing insignificant zeros removed after the decimal point.
+ * The toString() method returns a string in the format "amount currency", e.g., "1 USD", "0.00000001 BTC".
+ * @final
  */
 class Money implements JsonSerializable, Stringable
 {
@@ -39,23 +40,25 @@ class Money implements JsonSerializable, Stringable
     public const ROUND_HALF_DOWN = PHP_ROUND_HALF_DOWN;
     private const SCALE = PHP_FLOAT_DIG - 1;
 
-    private string $amount;
-    private Currency $currency;
-    private int $scale;
+    /** @var numeric-string */
+    private readonly string $amount;
+    private readonly Currency $currency;
+    /** @var int<0, 14> */
+    private readonly int $scale;
 
     /**
-     * @param int|float|string $amount Сумма денег
-     * @param string|Currency $currency Валюта
+     * @param int|float|numeric-string $amount Amount of money
+     * @param non-empty-string|Currency $currency Currency
      */
-    public function __construct(float $amount, $currency)
+    final public function __construct(int|float|string $amount, string|Currency $currency)
     {
         $this->currency = $currency instanceof Currency ? $currency : new Currency($currency);
         $this->scale = $this->currency->getDecimalCount();
-        $this->amount = $this->floatToString($amount);
+        $this->amount = $this->format($amount);
     }
 
     /**
-     * Проверить, одинаковая ли валюта у двух объектов.
+     * Checks if the currency of two objects is the same.
      */
     final public function isSameCurrency(self $other): bool
     {
@@ -63,7 +66,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, равны ли два объекта.
+     * Checks if two objects are equal.
      */
     final public function isEquals(self $other): bool
     {
@@ -71,7 +74,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, что два объекта не равны.
+     * Checks that two objects are not equal.
      */
     final public function isNotEquals(self $other): bool
     {
@@ -79,7 +82,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, больше ли текущий объект, чем переданный.
+     * Check if the current object is greater than the passed one.
      */
     final public function isGreaterThan(self $other): bool
     {
@@ -87,7 +90,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, меньше ли текущий объект, чем переданный.
+     * Check if the current object is less than the passed one.
      */
     final public function isLessThan(self $other): bool
     {
@@ -95,7 +98,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, больше или равен текущий объект, чем переданный.
+     * Check if the current object is greater than or equal to the passed one.
      */
     final public function isGreaterThanOrEquals(self $other): bool
     {
@@ -103,7 +106,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, меньше или равен текущий объект, чем переданный.
+     * Check if the current object is less than or equal to the passed one.
      */
     final public function isLessThanOrEquals(self $other): bool
     {
@@ -111,20 +114,20 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Сложить два объекта.
+     * Sum two objects.
      */
     final public function add(self $other): self
     {
         if (!$this->isSameCurrency($other)) {
-            throw new InvalidArgumentException('Валюты должны совпадать.');
+            throw new InvalidArgumentException('Currencies must match.');
         }
 
         return $this->newInstance(bcadd($this->amount, $other->amount, $this->scale));
     }
 
     /**
-     * Сложить два объекта.
-     * Алиас для метода add.
+     * Sum two objects.
+     * Alias for the add method.
      */
     final public function plus(self $other): self
     {
@@ -132,20 +135,20 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Вычесть из текущего объекта переданный.
+     * Subtract the passed object from the current one.
      */
     final public function subtract(self $other): self
     {
         if (!$this->isSameCurrency($other)) {
-            throw new InvalidArgumentException('Валюты должны совпадать.');
+            throw new InvalidArgumentException('Currencies must match.');
         }
 
         return $this->newInstance(bcsub($this->amount, $other->amount, $this->scale));
     }
 
     /**
-     * Вычесть из текущего объекта переданный.
-     * Алиас для метода subtract.
+     * Subtract the passed object from the current one.
+     * Alias for the subtract method.
      */
     final public function minus(self $other): self
     {
@@ -153,35 +156,35 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Умножить текущий объект на множитель.
+     * Multiply the current object by the multiplier.
      *
-     * @param int|float $multiplier Множитель
-     * @param int{self::ROUND_*} $roundingMode Режим округления
+     * @param int|float $multiplier Multiplier
+     * @param self::ROUND_HALF_UP|self::ROUND_HALF_DOWN $roundingMode Rounding mode
      */
-    final public function multiply(float $multiplier, int $roundingMode = self::ROUND_HALF_UP): self
+    final public function multiply(int|float $multiplier, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcmul($this->amount, $this->floatToString($multiplier, self::SCALE), self::SCALE);
+        $value = bcmul($this->amount, $this->format($multiplier, self::SCALE), self::SCALE);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
     }
 
     /**
-     * Разделить текущий объект на делитель.
+     * Divide the current object by the divisor.
      *
-     * @param int|float $divisor Делитель
-     * @param int{self::ROUND_*} $roundingMode Режим округления
+     * @param int|float $divisor Divisor
+     * @param self::ROUND_HALF_UP|self::ROUND_HALF_DOWN $roundingMode Rounding mode
      */
-    final public function divide(float $divisor, int $roundingMode = self::ROUND_HALF_UP): self
+    final public function divide(int|float $divisor, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcdiv($this->amount, $this->floatToString($divisor, self::SCALE), self::SCALE);
+        $value = bcdiv($this->amount, $this->format($divisor, self::SCALE), self::SCALE);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
     }
 
     /**
-     * Проверить, равен ли объект нулю.
+     * Check if the current object is zero.
      */
     final public function isZero(): bool
     {
@@ -189,7 +192,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, положительное ли число.
+     * Check if the number is positive.
      */
     final public function isPositive(): bool
     {
@@ -197,7 +200,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Проверить, отрицательное ли число.
+     * Check if the number is negative.
      */
     final public function isNegative(): bool
     {
@@ -205,7 +208,8 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Получить сумму.
+     * Get a mount.
+     * @return numeric-string
      */
     final public function getAmount(): string
     {
@@ -213,11 +217,14 @@ class Money implements JsonSerializable, Stringable
             return '0';
         }
 
-        return rtrim(rtrim($this->amount, '0'), '.');
+        $amount = rtrim(rtrim($this->amount, '0'), '.');
+
+        /** @var numeric-string */
+        return $amount;
     }
 
     /**
-     * Получить валюту.
+     * Get a currency.
      */
     final public function getCurrency(): Currency
     {
@@ -225,7 +232,7 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
-     * Получить объект в виде строки в формате "сумма валюта".
+     * Get an object as a string in the format "amount currency".
      */
     final public function toString(bool $trimZero = true): string
     {
@@ -241,6 +248,9 @@ class Money implements JsonSerializable, Stringable
         return $this->toString();
     }
 
+    /**
+     * @return array{amount: string, currency: non-empty-string}
+     */
     final public function jsonSerialize(): array
     {
         return [
@@ -249,21 +259,28 @@ class Money implements JsonSerializable, Stringable
         ];
     }
 
+    /**
+     * @param numeric-string $value
+     * @return int<0, max>
+     */
     private function getFractionalCount(string $value): int
     {
         return strlen($this->getFractionalPart($value));
     }
 
+    /**
+     * @param numeric-string $value
+     * @return string
+     */
     private function getFractionalPart(string $value): string
     {
-        return explode('.', rtrim($value, 0))[1];
+        return explode('.', rtrim($value, '0'))[1] ?? '';
     }
 
-    private function getIntegerPart(string $value): string
-    {
-        return explode('.', $value)[0];
-    }
-
+    /**
+     * @param numeric-string $value
+     * @return string
+     */
     private function getMinimalFractionalUnit(string $value): string
     {
         if ($this->getFractionalCount($value) === 0) {
@@ -278,21 +295,35 @@ class Money implements JsonSerializable, Stringable
         return $unit;
     }
 
+    /**
+     * @param numeric-string $number
+     * @return numeric-string
+     */
     private function roundUp(string $number): string
     {
         $scale = $this->getFractionalCount($number);
 
+        /** @var numeric-string $adjustment */
         $adjustment = $this->getMinimalFractionalUnit($number);
         $number = bcadd($number, $adjustment, self::SCALE);
 
-        return $this->floatToString($number, $scale - 1);
+        return $this->format($number, $scale - 1);
     }
 
+    /**
+     * @param numeric-string $number
+     * @return numeric-string
+     */
     private function roundDown(string $number): string
     {
         return bcadd($number, '0', $this->scale);
     }
 
+    /**
+     * @param numeric-string $value
+     * @param positive-int $roundingMode
+     * @return numeric-string
+     */
     private function round(string $value, int $roundingMode): string
     {
         if ($this->scale >= $this->getFractionalCount($value)) {
@@ -316,18 +347,35 @@ class Money implements JsonSerializable, Stringable
         return $this->roundDown($value);
     }
 
-    private function floatToString(float $amount, ?int $scale = null): string
+    /**
+     * @param int|float|numeric-string $amount
+     * @return numeric-string
+     */
+    private function format(int|float|string $amount, ?int $scale = null): string
     {
         $scale ??= $this->scale;
 
-        return sprintf("%.{$scale}F", $amount);
+        $formatted = number_format((float)$amount, $scale, '.', '');
+        if (!is_numeric($formatted)) {
+            throw new InvalidArgumentException('Amount must be numeric.');
+        }
+
+        /** @var numeric-string $formatted */
+        return $formatted;
     }
 
+    /**
+     * @param numeric-string $amount
+     */
     private function newInstance(string $amount): self
     {
         return new self($amount, $this->currency);
     }
 
+    /**
+     * @param numeric-string $amount
+     * @param numeric-string $other
+     */
     private function compare(string $amount, string $other): int
     {
         return bccomp($amount, $other, $this->scale);
