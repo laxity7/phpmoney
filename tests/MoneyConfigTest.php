@@ -14,6 +14,18 @@ use PHPUnit\Framework\TestCase;
  */
 final class MoneyConfigTest extends TestCase
 {
+    public function testIsNotConfigured(): void
+    {
+        self::assertFalse(MoneyConfig::isConfigured());
+    }
+
+    public function testIsConfigured(): void
+    {
+        MoneyConfig::configure(new FiatCurrenciesStub(), true);
+
+        self::assertTrue(MoneyConfig::isConfigured());
+    }
+
     /**
      * @covers \Laxity7\Money\MoneyConfig::configure()
      */

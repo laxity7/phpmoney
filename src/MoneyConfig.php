@@ -30,6 +30,11 @@ final class MoneyConfig
     ) {
     }
 
+    public static function isConfigured(): bool
+    {
+        return isset(self::$instance);
+    }
+
     /**
      * @param Currencies<int, Currency> $currencies
      */
@@ -48,7 +53,7 @@ final class MoneyConfig
     {
         if (!isset(self::$instance)) {
             $defaultCurrencies = new AggregateCurrencies(
-                new \Laxity7\Money\Currencies\Currencies(require __DIR__ . '/Currencies/faitCurrencies.php'),
+                new \Laxity7\Money\Currencies\Currencies(require __DIR__ . '/Currencies/fiatCurrencies.php'),
                 new \Laxity7\Money\Currencies\Currencies(require __DIR__ . '/Currencies/top100cryptoCurrencies.php')
             );
 
