@@ -211,10 +211,18 @@ class Money implements JsonSerializable, Stringable
      * Get a mount.
      * @return numeric-string
      */
-    final public function getAmount(): string
+    final public function getAmount(bool $trimZero = true): string
     {
+        if (!$trimZero) {
+            return $this->amount;
+        }
+
         if ($this->isZero()) {
             return '0';
+        }
+
+        if (!str_contains($this->amount, '.')) {
+            return $this->amount;
         }
 
         $amount = rtrim(rtrim($this->amount, '0'), '.');
@@ -236,11 +244,7 @@ class Money implements JsonSerializable, Stringable
      */
     final public function toString(bool $trimZero = true): string
     {
-        if ($trimZero) {
-            return $this->getAmount() . ' ' . $this->getCurrency()->getCode();
-        }
-
-        return $this->amount . ' ' . $this->getCurrency()->getCode();
+        return $this->getAmount($trimZero) . ' ' . $this->getCurrency()->getCode();
     }
 
     final public function __toString(): string

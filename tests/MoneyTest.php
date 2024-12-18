@@ -426,26 +426,53 @@ final class MoneyTest extends TestCase
      */
     public function testGetAmount(): void
     {
+        $money = new Money(0.0, 'USD');
+        self::assertSame('0', $money->getAmount());
+
+        $money = new Money(0.0, 'USD');
+        self::assertSame('0.00', $money->getAmount(false));
+
         $money = new Money(1.0, 'USD');
         self::assertSame('1', $money->getAmount());
+
+        $money = new Money(100.0, 'USD');
+        self::assertSame('100', $money->getAmount());
+
+        $money = new Money(100.0, 'USD');
+        self::assertSame('100.00', $money->getAmount(false));
 
         $money = new Money(0.0, 'USD');
         self::assertSame('0', $money->getAmount());
 
-        $money = new Money(-1.0, 'USD');
-        self::assertSame('-1', $money->getAmount());
+        $money = new Money(-10.0, 'USD');
+        self::assertSame('-10', $money->getAmount());
 
-        $money = new Money(1.00000001, 'USD');
-        self::assertSame('1', $money->getAmount());
+        $money = new Money(10.00000001, 'USD');
+        self::assertSame('10', $money->getAmount());
 
-        $money = new Money(1.00000009, 'USD');
-        self::assertSame('1', $money->getAmount());
+        $money = new Money(10.00000009, 'USD');
+        self::assertSame('10', $money->getAmount());
 
-        $money = new Money(1.0000001, 'BTC');
-        self::assertSame('1.0000001', $money->getAmount());
+        $money = new Money(10.0000001, 'BTC');
+        self::assertSame('10.0000001', $money->getAmount());
 
-        $money = new Money(1.0090000, 'BTC');
-        self::assertSame('1.009', $money->getAmount());
+        $money = new Money(10.00100, 'BTC');
+        self::assertSame('10.00100000', $money->getAmount(false));
+
+        $money = new Money(00.00000, 'BTC');
+        self::assertSame('0.00000000', $money->getAmount(false));
+
+        $money = new Money(10.0090000, 'BTC');
+        self::assertSame('10.009', $money->getAmount());
+
+        $money = new Money(10000, 'JPY');
+        self::assertSame('10000', $money->getAmount());
+
+        $money = new Money(10000.40, 'JPY');
+        self::assertSame('10000', $money->getAmount());
+
+        $money = new Money(10000.50, 'JPY');
+        self::assertSame('10001', $money->getAmount());
     }
 
     /**

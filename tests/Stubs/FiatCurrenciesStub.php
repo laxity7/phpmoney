@@ -27,7 +27,7 @@ final class FiatCurrenciesStub implements Currencies
 
     public function getDecimalCount(Currency $currency): int
     {
-        return 2;
+        return $currency->getCode() === 'JPY' ? 0 : 2;
     }
 
     public function getIterator(): Traversable
