@@ -163,7 +163,8 @@ class Money implements JsonSerializable, Stringable
      */
     final public function multiply(int|float $multiplier, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcmul($this->amount, $this->format($multiplier, self::SCALE), self::SCALE);
+        $scale = max($this->scale, self::SCALE);
+        $value = bcmul($this->amount, $this->format($multiplier, $scale), $scale + 1);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -177,7 +178,8 @@ class Money implements JsonSerializable, Stringable
      */
     final public function divide(int|float $divisor, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $value = bcdiv($this->amount, $this->format($divisor, self::SCALE), self::SCALE);
+        $scale = max($this->scale, self::SCALE);
+        $value = bcdiv($this->amount, $this->format($divisor, $scale), $scale + 1);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -287,11 +289,12 @@ class Money implements JsonSerializable, Stringable
      */
     private function getMinimalFractionalUnit(string $value): string
     {
-        if ($this->getFractionalCount($value) === 0) {
+        $fractionCount = $this->getFractionalCount($value);
+        if ($fractionCount === 0) {
             return '0';
         }
 
-        $unit = '0.' . str_repeat('0', $this->getFractionalCount($value) - 1) . '1';
+        $unit = sprintf('0.%s1', str_repeat('0', min($fractionCount - 1, $this->scale + 1)));
         if ($value[0] === '-') {
             $unit = '-' . $unit;
         }
@@ -300,18 +303,47 @@ class Money implements JsonSerializable, Stringable
     }
 
     /**
+     * @param numeric-string $value
+     */
+    private function getLastNumber(string $value): int
+    {
+        $fraction = $this->getFractionalPart($value);
+        $pos = $this->scale + 2;
+        $lastChar = $fraction[$pos] ?? '';
+
+        if ($lastChar === '0') {
+            // if last char is 0, then we need to get the last non-zero char
+            for ($i = $pos - 1; $i >= 0; $i--) {
+                if ($fraction[$i] !== '0') {
+                    $lastChar = $fraction[$i];
+                    break;
+                }
+            }
+        }
+
+        if ($lastChar === '') {
+            $lastChar = substr($fraction, -1);
+        }
+
+        return (int)$lastChar;
+    }
+
+    /**
      * @param numeric-string $number
      * @return numeric-string
      */
     private function roundUp(string $number): string
     {
-        $scale = $this->getFractionalCount($number);
+        if ($this->scale === 0) {
+            $result = bcadd($number, '0.01', 2);
+            return $this->format($result, $this->scale);
+        }
 
         /** @var numeric-string $adjustment */
         $adjustment = $this->getMinimalFractionalUnit($number);
-        $number = bcadd($number, $adjustment, self::SCALE);
+        $result = bcadd($number, $adjustment, self::SCALE);
 
-        return $this->format($number, $scale - 1);
+        return $this->format($result, $this->getFractionalCount($adjustment) - 1);
     }
 
     /**
@@ -330,12 +362,12 @@ class Money implements JsonSerializable, Stringable
      */
     private function round(string $value, int $roundingMode): string
     {
-        if ($this->scale >= $this->getFractionalCount($value)) {
+        if ($this->getFractionalCount($value) <= $this->scale && $this->scale <= self::SCALE) {
             return $value;
         }
 
-        $lastChar = substr($this->getFractionalPart($value), -1);
-        if ($lastChar === '5') {
+        $lastChar = $this->getLastNumber($value);
+        if ($lastChar === 5) {
             switch ($roundingMode) {
                 case PHP_ROUND_HALF_UP:
                     $value = $this->roundUp($value);

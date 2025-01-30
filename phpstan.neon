@@ -6,6 +6,8 @@ parameters:
     maximumNumberOfProcesses: 100
     minimumNumberOfJobsPerProcess: 10
 
+  tmpDir: .phpstancache
+
   treatPhpDocTypesAsCertain: false
 
   excludePaths:

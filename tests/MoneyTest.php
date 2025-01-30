@@ -261,17 +261,25 @@ final class MoneyTest extends TestCase
         $result = $money->multiply(1 / 99.99);
         self::assertSame('1', $result->getAmount());
 
+        $money = new Money(99.99, 'BTC');
+        $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
+        self::assertSame('1', $result->getAmount());
+
         $money = new Money(99.99, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
         self::assertSame('1', $result->getAmount());
 
         $money = new Money(99.98, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
-        self::assertSame('0.99', $result->getAmount());
+        self::assertSame('1', $result->getAmount());
+
+        $money = new Money(99.98, 'BTC');
+        $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
+        self::assertSame('0.99989999', $result->getAmount());
 
         $money = new Money(-99.98, 'USD');
         $result = $money->multiply(1 / 99.99, Money::ROUND_HALF_DOWN);
-        self::assertSame('-0.99', $result->getAmount());
+        self::assertSame('-1', $result->getAmount());
 
         $money = new Money(99.99, 'USD');
         $result = $money->multiply(1 / 99.99);
@@ -325,6 +333,10 @@ final class MoneyTest extends TestCase
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
         self::assertSame('0.00000005', $result->getAmount());
 
+        $money = new Money('4.6', 'ETH');
+        $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
+        self::assertSame('0.000000046', $result->getAmount());
+
         $money = new Money('4.9', 'BTC');
         $result = $money->multiply(0.00000001, Money::ROUND_HALF_DOWN);
         self::assertSame('0.00000005', $result->getAmount());
@@ -332,6 +344,46 @@ final class MoneyTest extends TestCase
         $money = new Money('4.9', 'BTC');
         $result = $money->multiply(0.00000001);
         self::assertSame('0.00000005', $result->getAmount());
+
+        $money = new Money('965', 'BTC');
+        $result = $money->multiply(1 / 3);
+        self::assertSame('321.66666666', $result->getAmount());
+
+        $money = new Money('965', 'BTC');
+        $result = $money->multiply(1 / 3);
+        self::assertSame('321.66666666', $result->getAmount());
+
+        $money = new Money('965', 'ETH');
+        $result = $money->multiply(1 / 3);
+        self::assertSame('321.666666666666628771', $result->getAmount());
+
+        $money = new Money('965', 'JPY');
+        $result = $money->multiply(1 / 3, Money::ROUND_HALF_DOWN);
+        self::assertSame('322', $result->getAmount());
+
+        $money = new Money('965', 'JPY');
+        $result = $money->multiply(1 / 3, Money::ROUND_HALF_UP);
+        self::assertSame('322', $result->getAmount());
+
+        $money = new Money('100', 'JPY');
+        $result = $money->multiply(1 / 2.2, Money::ROUND_HALF_UP);
+        self::assertSame('45', $result->getAmount());
+
+        $money = new Money('100', 'JPY');
+        $result = $money->multiply(1 / 2.31, Money::ROUND_HALF_UP);
+        self::assertSame('43', $result->getAmount());
+
+        $money = new Money('100', 'USD');
+        $result = $money->multiply(1 / 2.31, Money::ROUND_HALF_UP);
+        self::assertSame('43.29', $result->getAmount());
+
+        $money = new Money('965', 'USDT');
+        $result = $money->multiply(1 / 3, Money::ROUND_HALF_UP);
+        self::assertSame('321.6666', $result->getAmount());
+
+        $money = new Money('965', 'USDT');
+        $result = $money->multiply(1 / 3, Money::ROUND_HALF_DOWN);
+        self::assertSame('321.6666', $result->getAmount());
     }
 
     /**
@@ -344,7 +396,7 @@ final class MoneyTest extends TestCase
         self::assertSame('3', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
-        $result = $money->divide(2);
+        $result = $money->divide(2, Money::ROUND_HALF_UP);
         self::assertSame('500', $result->getAmount());
 
         $money = new Money('999.99999999', 'BTC');
@@ -374,6 +426,22 @@ final class MoneyTest extends TestCase
         $money = new Money('0.0000005', 'BTC');
         $result = $money->divide(2, Money::ROUND_HALF_UP);
         self::assertSame('0.00000025', $result->getAmount());
+
+        $money = new Money('965', 'BTC');
+        $result = $money->divide(1 / 3);
+        self::assertSame('2895', $result->getAmount());
+
+        $money = new Money('965', 'ETH');
+        $result = $money->divide(3);
+        self::assertSame('321.666666666666685614', $result->getAmount());
+
+        $money = new Money('965', 'JPY');
+        $result = $money->divide(3, Money::ROUND_HALF_DOWN);
+        self::assertSame('322', $result->getAmount());
+
+        $money = new Money('965', 'JPY');
+        $result = $money->divide(3, Money::ROUND_HALF_UP);
+        self::assertSame('322', $result->getAmount());
     }
 
     /**

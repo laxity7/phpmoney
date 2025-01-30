@@ -28,7 +28,12 @@ final class CryptoCurrenciesStub implements Currencies
 
     public function getDecimalCount(Currency $currency): int
     {
-        return 8;
+        /** @phpstan-ignore return.type */
+        return match ($currency->getCode()) {
+            'ETH' => 18,
+            'USDT' => 4,
+            default => 8,
+        };
     }
 
     public function getIterator(): Traversable
