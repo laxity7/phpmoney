@@ -60,7 +60,7 @@ final class AggregateCurrenciesTest extends TestCase
         self::assertEquals(8, $aggregateCurrencies->getDecimalCount($currency));
     }
 
-    public function getDecimalCountThrowsExceptionWhenCurrencyIsInNoRepository(): void
+    public function testGetDecimalCountThrowsExceptionWhenCurrencyIsInNoRepository(): void
     {
         $currency = new Currency('XXX');
         $currencies1 = new FiatCurrenciesStub();

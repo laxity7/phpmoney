@@ -30,7 +30,10 @@ final class Currencies implements \Laxity7\Money\Currencies
             if (!is_string($currency['name'] ?? null) || !is_string($currency['symbol'] ?? null) || !is_int($currency['scale'] ?? null)) {
                 throw new InvalidArgumentException('Invalid currency data');
             }
-            if ($currency['scale'] > PHP_FLOAT_DIG) {
+            if ($currency['scale'] < 0) {
+                throw new InvalidArgumentException('Currency scale must not be negative.');
+            }
+            if ($currency['scale'] >= PHP_FLOAT_DIG) {
                 throw new InvalidArgumentException('Currency scale is too large. Maximum is ' . (PHP_FLOAT_DIG - 1));
             }
 
@@ -49,7 +52,7 @@ final class Currencies implements \Laxity7\Money\Currencies
     {
         return new \ArrayIterator(
             array_map(
-                static fn(string $code) => new Currency($code),
+                fn(string $code) => new Currency($code, $this),
                 array_keys($this->currencies)
             )
         );

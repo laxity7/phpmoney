@@ -74,12 +74,12 @@ return [
     'BHD' => [
         'name' => 'Bahraini Dinar',
         'symbol' => 'BHD',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'BIF' => [
         'name' => 'Burundi Franc',
         'symbol' => 'BIF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'BMD' => [
         'name' => 'Bermudian Dollar',
@@ -159,12 +159,12 @@ return [
     'CLF' => [
         'name' => 'Unidad de Fomento',
         'symbol' => 'CLF',
-        'scale' => 2,
+        'scale' => 4,
     ],
     'CLP' => [
         'name' => 'Chilean Peso',
         'symbol' => 'CLP',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'CNY' => [
         'name' => 'Yuan Renminbi',
@@ -209,7 +209,7 @@ return [
     'DJF' => [
         'name' => 'Djibouti Franc',
         'symbol' => 'DJF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'DKK' => [
         'name' => 'Danish Krone',
@@ -284,7 +284,7 @@ return [
     'GNF' => [
         'name' => 'Guinean Franc',
         'symbol' => 'GNF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'GTQ' => [
         'name' => 'Quetzal',
@@ -334,17 +334,17 @@ return [
     'IQD' => [
         'name' => 'Iraqi Dinar',
         'symbol' => 'IQD',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'IRR' => [
         'name' => 'Iranian Rial',
         'symbol' => 'IRR',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'ISK' => [
         'name' => 'Iceland Krona',
         'symbol' => 'ISK',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'JMD' => [
         'name' => 'Jamaican Dollar',
@@ -354,12 +354,12 @@ return [
     'JOD' => [
         'name' => 'Jordanian Dinar',
         'symbol' => 'JOD',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'JPY' => [
         'name' => 'Yen',
         'symbol' => 'JPY',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'KES' => [
         'name' => 'Kenyan Shilling',
@@ -377,9 +377,9 @@ return [
         'scale' => 2,
     ],
     'KMF' => [
-        'name' => 'Comorian Franc ',
+        'name' => 'Comorian Franc',
         'symbol' => 'KMF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'KPW' => [
         'name' => 'North Korean Won',
@@ -389,12 +389,12 @@ return [
     'KRW' => [
         'name' => 'Won',
         'symbol' => 'KRW',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'KWD' => [
         'name' => 'Kuwaiti Dinar',
         'symbol' => 'KWD',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'KYD' => [
         'name' => 'Cayman Islands Dollar',
@@ -434,7 +434,7 @@ return [
     'LYD' => [
         'name' => 'Libyan Dinar',
         'symbol' => 'LYD',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'MAD' => [
         'name' => 'Moroccan Dirham',
@@ -544,7 +544,7 @@ return [
     'OMR' => [
         'name' => 'Rial Omani',
         'symbol' => 'OMR',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'PAB' => [
         'name' => 'Balboa',
@@ -579,7 +579,7 @@ return [
     'PYG' => [
         'name' => 'Guarani',
         'symbol' => 'PYG',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'QAR' => [
         'name' => 'Qatari Rial',
@@ -604,7 +604,7 @@ return [
     'RWF' => [
         'name' => 'Rwanda Franc',
         'symbol' => 'RWF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'SAR' => [
         'name' => 'Saudi Riyal',
@@ -699,7 +699,7 @@ return [
     'TND' => [
         'name' => 'Tunisian Dinar',
         'symbol' => 'TND',
-        'scale' => 2,
+        'scale' => 3,
     ],
     'TOP' => [
         'name' => 'Pa’anga',
@@ -734,7 +734,7 @@ return [
     'UGX' => [
         'name' => 'Uganda Shilling',
         'symbol' => 'UGX',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'USD' => [
         'name' => 'US Dollar',
@@ -749,7 +749,7 @@ return [
     'UYI' => [
         'name' => 'Uruguay Peso en Unidades Indexadas (UI)',
         'symbol' => 'UYI',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'UYU' => [
         'name' => 'Peso Uruguayo',
@@ -759,7 +759,7 @@ return [
     'UYW' => [
         'name' => 'Unidad Previsional',
         'symbol' => 'UYW',
-        'scale' => 2,
+        'scale' => 4,
     ],
     'UZS' => [
         'name' => 'Uzbekistan Sum',
@@ -779,12 +779,12 @@ return [
     'VND' => [
         'name' => 'Dong',
         'symbol' => 'VND',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'VUV' => [
         'name' => 'Vatu',
         'symbol' => 'VUV',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'WST' => [
         'name' => 'Tala',
@@ -794,7 +794,7 @@ return [
     'XAF' => [
         'name' => 'CFA Franc BEAC',
         'symbol' => 'XAF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'XCD' => [
         'name' => 'East Caribbean Dollar',
@@ -809,12 +809,12 @@ return [
     'XOF' => [
         'name' => 'CFA Franc BCEAO',
         'symbol' => 'XOF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'XPF' => [
         'name' => 'CFP Franc',
         'symbol' => 'XPF',
-        'scale' => 2,
+        'scale' => 0,
     ],
     'XSU' => [
         'name' => 'Sucre',

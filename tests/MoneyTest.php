@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laxity7\Money\Test;
 
-use InvalidArgumentException;
+use Laxity7\Money\Exceptions\InvalidArgumentException;
 use Laxity7\Money\Money;
 use Laxity7\Money\Test\Stubs\MoneyConfigStub;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +49,26 @@ final class MoneyTest extends TestCase
     }
 
     /**
+     * @covers Money::__construct()
+     */
+    public function testConstructWithNonNumericStringThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        /** @phpstan-ignore argument.type */
+        new Money('abc', 'USD');
+    }
+
+    /**
+     * @covers Money::__construct()
+     */
+    public function testConstructStringPreservesPrecision(): void
+    {
+        // Large string amounts should not lose precision through float conversion
+        $money = new Money('99999999999999.99', 'USD');
+        self::assertSame('99999999999999.99', $money->getAmount());
+    }
+
+    /**
      * @covers Money::isSameCurrency()
      */
     public function testIsSameCurrency(): void
@@ -68,15 +90,24 @@ final class MoneyTest extends TestCase
         $other = new Money(1.0, 'USD');
         self::assertTrue($money->isEquals($other));
 
-        $other = new Money(1.0, 'USDT');
-        self::assertFalse($money->isEquals($other));
-
         $other = new Money(2.0, 'USD');
         self::assertFalse($money->isEquals($other));
 
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
         self::assertTrue($money->isEquals($other));
+    }
+
+    /**
+     * @covers Money::isEquals()
+     */
+    public function testIsEqualsDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isEquals($other);
     }
 
     /**
@@ -88,9 +119,6 @@ final class MoneyTest extends TestCase
         $other = new Money(1.0, 'USD');
         self::assertFalse($money->isNotEquals($other));
 
-        $other = new Money(1.0, 'USDT');
-        self::assertTrue($money->isNotEquals($other));
-
         $other = new Money(2.0, 'USD');
         self::assertTrue($money->isNotEquals($other));
 
@@ -104,15 +132,24 @@ final class MoneyTest extends TestCase
     }
 
     /**
+     * @covers Money::isNotEquals()
+     */
+    public function testIsNotEqualsDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isNotEquals($other);
+    }
+
+    /**
      * @covers Money::isGreaterThan()
      */
     public function testIsGreaterThan(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        self::assertFalse($money->isGreaterThan($other));
-
-        $other = new Money(1.0, 'USDT');
         self::assertFalse($money->isGreaterThan($other));
 
         $other = new Money(2.0, 'USD');
@@ -124,15 +161,24 @@ final class MoneyTest extends TestCase
     }
 
     /**
+     * @covers Money::isGreaterThan()
+     */
+    public function testIsGreaterThanDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isGreaterThan($other);
+    }
+
+    /**
      * @covers Money::isLessThan()
      */
     public function testIsLessThan(): void
     {
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
-        self::assertFalse($money->isLessThan($other));
-
-        $other = new Money(1.0, 'USDT');
         self::assertFalse($money->isLessThan($other));
 
         $other = new Money(2.0, 'USD');
@@ -144,6 +190,18 @@ final class MoneyTest extends TestCase
     }
 
     /**
+     * @covers Money::isLessThan()
+     */
+    public function testIsLessThanDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isLessThan($other);
+    }
+
+    /**
      * @covers Money::isGreaterThanOrEquals()
      */
     public function testIsGreaterThanOrEquals(): void
@@ -151,9 +209,6 @@ final class MoneyTest extends TestCase
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
         self::assertTrue($money->isGreaterThanOrEquals($other));
-
-        $other = new Money(1.0, 'USDT');
-        self::assertFalse($money->isGreaterThanOrEquals($other));
 
         $other = new Money(2.0, 'USD');
         self::assertFalse($money->isGreaterThanOrEquals($other));
@@ -168,6 +223,18 @@ final class MoneyTest extends TestCase
     }
 
     /**
+     * @covers Money::isGreaterThanOrEquals()
+     */
+    public function testIsGreaterThanOrEqualsDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isGreaterThanOrEquals($other);
+    }
+
+    /**
      * @covers Money::isLessThanOrEquals()
      */
     public function testIsLessThanOrEquals(): void
@@ -175,9 +242,6 @@ final class MoneyTest extends TestCase
         $money = new Money(1.0, 'USD');
         $other = new Money(1.0, 'USD');
         self::assertTrue($money->isLessThanOrEquals($other));
-
-        $other = new Money(1.0, 'USDT');
-        self::assertFalse($money->isLessThanOrEquals($other));
 
         $other = new Money(2.0, 'USD');
         self::assertTrue($money->isLessThanOrEquals($other));
@@ -189,6 +253,18 @@ final class MoneyTest extends TestCase
         $money = new Money(999.99999999, 'BTC');
         $other = new Money(999.99999999, 'BTC');
         self::assertTrue($money->isLessThanOrEquals($other));
+    }
+
+    /**
+     * @covers Money::isLessThanOrEquals()
+     */
+    public function testIsLessThanOrEqualsDifferentCurrencyThrows(): void
+    {
+        $money = new Money(1.0, 'USD');
+        $other = new Money(1.0, 'USDT');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->isLessThanOrEquals($other);
     }
 
     /**
@@ -347,15 +423,15 @@ final class MoneyTest extends TestCase
 
         $money = new Money('965', 'BTC');
         $result = $money->multiply(1 / 3);
-        self::assertSame('321.66666666', $result->getAmount());
+        self::assertSame('321.66666667', $result->getAmount());
 
         $money = new Money('965', 'BTC');
         $result = $money->multiply(1 / 3);
-        self::assertSame('321.66666666', $result->getAmount());
+        self::assertSame('321.66666667', $result->getAmount());
 
         $money = new Money('965', 'ETH');
         $result = $money->multiply(1 / 3);
-        self::assertSame('321.666666666666628771', $result->getAmount());
+        self::assertSame('321.666666667', $result->getAmount());
 
         $money = new Money('965', 'JPY');
         $result = $money->multiply(1 / 3, Money::ROUND_HALF_DOWN);
@@ -379,11 +455,21 @@ final class MoneyTest extends TestCase
 
         $money = new Money('965', 'USDT');
         $result = $money->multiply(1 / 3, Money::ROUND_HALF_UP);
-        self::assertSame('321.6666', $result->getAmount());
+        self::assertSame('321.6667', $result->getAmount());
 
         $money = new Money('965', 'USDT');
         $result = $money->multiply(1 / 3, Money::ROUND_HALF_DOWN);
-        self::assertSame('321.6666', $result->getAmount());
+        self::assertSame('321.6667', $result->getAmount());
+    }
+
+    /**
+     * @covers Money::multiply()
+     */
+    public function testMultiplyWithStringMultiplier(): void
+    {
+        $money = new Money('100', 'BTC');
+        $result = $money->multiply('0.00000001');
+        self::assertSame('0.000001', $result->getAmount());
     }
 
     /**
@@ -433,7 +519,7 @@ final class MoneyTest extends TestCase
 
         $money = new Money('965', 'ETH');
         $result = $money->divide(3);
-        self::assertSame('321.666666666666685614', $result->getAmount());
+        self::assertSame('321.666666667', $result->getAmount());
 
         $money = new Money('965', 'JPY');
         $result = $money->divide(3, Money::ROUND_HALF_DOWN);
@@ -442,6 +528,39 @@ final class MoneyTest extends TestCase
         $money = new Money('965', 'JPY');
         $result = $money->divide(3, Money::ROUND_HALF_UP);
         self::assertSame('322', $result->getAmount());
+    }
+
+    /**
+     * @covers Money::divide()
+     */
+    public function testDivideByZeroThrows(): void
+    {
+        $money = new Money(10.0, 'USD');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Division by zero.');
+        $money->divide(0);
+    }
+
+    /**
+     * @covers Money::divide()
+     */
+    public function testDivideByZeroFloatThrows(): void
+    {
+        $money = new Money(10.0, 'USD');
+
+        $this->expectException(InvalidArgumentException::class);
+        $money->divide(0.0);
+    }
+
+    /**
+     * @covers Money::divide()
+     */
+    public function testDivideWithStringDivisor(): void
+    {
+        $money = new Money('10', 'USD');
+        $result = $money->divide('2');
+        self::assertSame('5', $result->getAmount());
     }
 
     /**
@@ -487,6 +606,43 @@ final class MoneyTest extends TestCase
 
         $money = new Money(-1.0, 'USD');
         self::assertTrue($money->isNegative());
+    }
+
+    /**
+     * @covers Money::abs()
+     */
+    public function testAbs(): void
+    {
+        $money = new Money(-10.50, 'USD');
+        $result = $money->abs();
+        self::assertSame('10.5', $result->getAmount());
+
+        $money = new Money(10.50, 'USD');
+        $result = $money->abs();
+        self::assertSame('10.5', $result->getAmount());
+        self::assertSame($money, $result); // same instance for positive
+
+        $money = new Money(0.0, 'USD');
+        $result = $money->abs();
+        self::assertSame('0', $result->getAmount());
+    }
+
+    /**
+     * @covers Money::negate()
+     */
+    public function testNegate(): void
+    {
+        $money = new Money(10.50, 'USD');
+        $result = $money->negate();
+        self::assertSame('-10.5', $result->getAmount());
+
+        $money = new Money(-10.50, 'USD');
+        $result = $money->negate();
+        self::assertSame('10.5', $result->getAmount());
+
+        $money = new Money(0.0, 'USD');
+        $result = $money->negate();
+        self::assertSame('0', $result->getAmount());
     }
 
     /**
@@ -575,5 +731,122 @@ final class MoneyTest extends TestCase
         $money = new Money(1.0, 'usd');
         self::assertSame(['amount' => '1', 'currency' => 'USD'], $money->jsonSerialize());
         assertSame('{"amount":"1","currency":"USD"}', json_encode($money));
+    }
+
+    /**
+     * @covers Money::allocate()
+     */
+    public function testAllocate(): void
+    {
+        // even split — remainder to first part
+        $parts = (new Money('10.00', 'USD'))->allocate(1, 1, 1);
+        self::assertCount(3, $parts);
+        self::assertSame('3.34', $parts[0]->getAmount());
+        self::assertSame('3.33', $parts[1]->getAmount());
+        self::assertSame('3.33', $parts[2]->getAmount());
+        self::assertSame('10.00', array_reduce(
+            $parts,
+            static fn($carry, $p) => $carry === null ? $p : $carry->add($p)
+        )->getAmount(false));
+
+        // weighted split
+        $parts = (new Money('10.00', 'USD'))->allocate(1, 2, 3);
+        self::assertSame('1.67', $parts[0]->getAmount());
+        self::assertSame('3.33', $parts[1]->getAmount());
+        self::assertSame('5', $parts[2]->getAmount());
+
+        // no remainder
+        $parts = (new Money('10.00', 'USD'))->allocate(1, 1);
+        self::assertSame('5.00', $parts[0]->getAmount(false));
+        self::assertSame('5.00', $parts[1]->getAmount(false));
+
+        // crypto — smallest unit is 0.00000001
+        $parts = (new Money('0.00000003', 'BTC'))->allocate(1, 1, 1);
+        self::assertSame('0.00000001', $parts[0]->getAmount());
+        self::assertSame('0.00000001', $parts[1]->getAmount());
+        self::assertSame('0.00000001', $parts[2]->getAmount());
+
+        // negative amount
+        $parts = (new Money('-10.00', 'USD'))->allocate(1, 1, 1);
+        self::assertSame('-3.34', $parts[0]->getAmount());
+        self::assertSame('-3.33', $parts[1]->getAmount());
+        self::assertSame('-3.33', $parts[2]->getAmount());
+
+        // zero-scale currency (JPY)
+        $parts = (new Money('10', 'JPY'))->allocate(1, 1, 1);
+        self::assertSame('4', $parts[0]->getAmount());
+        self::assertSame('3', $parts[1]->getAmount());
+        self::assertSame('3', $parts[2]->getAmount());
+
+        // single ratio
+        $parts = (new Money('99.99', 'USD'))->allocate(1);
+        self::assertSame('99.99', $parts[0]->getAmount());
+    }
+
+    /**
+     * @covers Money::allocate()
+     */
+    public function testAllocateThrowsOnEmptyRatios(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new Money('10.00', 'USD'))->allocate();
+    }
+
+    /**
+     * @covers Money::allocate()
+     */
+    public function testAllocateThrowsOnNegativeRatio(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new Money('10.00', 'USD'))->allocate(1, -1);
+    }
+
+    /**
+     * @covers Money::allocate()
+     */
+    public function testAllocateThrowsWhenAllRatiosAreZero(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new Money('10.00', 'USD'))->allocate(0, 0);
+    }
+
+    /**
+     * @covers Money::split()
+     */
+    public function testSplit(): void
+    {
+        $parts = (new Money('10.00', 'USD'))->split(3);
+        self::assertCount(3, $parts);
+        self::assertSame('3.34', $parts[0]->getAmount());
+        self::assertSame('3.33', $parts[1]->getAmount());
+        self::assertSame('3.33', $parts[2]->getAmount());
+
+        // sum equals original
+        $sum = array_reduce($parts, static fn($carry, $p) => $carry === null ? $p : $carry->add($p));
+        self::assertSame('10.00', $sum->getAmount(false));
+
+        $parts = (new Money('0.00000001', 'BTC'))->split(2);
+        self::assertSame('0.00000001', $parts[0]->getAmount());
+        self::assertSame('0.00000000', $parts[1]->getAmount(false));
+    }
+
+    /**
+     * @covers Money::split()
+     */
+    public function testSplitThrowsOnZeroOrNegative(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new Money('10.00', 'USD'))->split(0);
+    }
+
+    /**
+     * @covers Money
+     */
+    public function testExplicitRegistryInjection(): void
+    {
+        $registry = new \Laxity7\Money\Test\Stubs\FiatCurrenciesStub();
+        $money = new Money('10.00', 'USD', $registry);
+        self::assertSame('10.00', $money->getAmount(false));
+        self::assertSame('USD', $money->getCurrency()->getCode());
     }
 }

@@ -301,11 +301,6 @@ return [
         'symbol' => 'MKR',
         'scale' => 8,
     ],
-    'MNT' => [
-        'name' => 'Mantle',
-        'symbol' => 'MNT',
-        'scale' => 8,
-    ],
     'MOG' => [
         'name' => 'Mog Coin',
         'symbol' => 'MOG',

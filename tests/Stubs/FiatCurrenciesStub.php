@@ -34,7 +34,7 @@ final class FiatCurrenciesStub implements Currencies
     {
         return new \ArrayIterator(
             array_map(
-                static fn($code) => new Currency($code),
+                fn($code) => new Currency($code, $this),
                 array_keys(self::CURRENCIES)
             )
         );

@@ -55,6 +55,7 @@ Configuration example:
 ```php
 use Laxity7\Money\Money;
 use Laxity7\Money\MoneyConfig;
+use Laxity7\Money\Currencies\Currencies;
 
 // You can configure your own currencies only once. You can't change it later.
 // Scale is the number of decimal places in the currency (e.g. 2 for USD, 8 for BTC). Max is 14.
@@ -63,7 +64,7 @@ MoneyConfig::configure(
         ['name' => 'US Dollar', 'symbol' => 'USD', 'scale' => 2],
         ['name' => 'Euro', 'symbol' => 'EUR', 'scale' => 4],
         ['name' => 'MyCoin', 'symbol' => 'MC', 'scale' => 8],
-   ]
+    ])
 );
 
 
