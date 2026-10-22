@@ -291,7 +291,10 @@ class Money implements JsonSerializable, Stringable
             }
         }
 
-        $total = (string)array_sum($ratios);
+        $total = '0';
+        foreach ($ratios as $ratio) {
+            $total = bcadd($total, (string)$ratio, 0);
+        }
         if (bccomp($total, '0', 0) === 0) {
             throw new InvalidArgumentException('Ratios must not all be zero.');
         }
@@ -533,6 +536,15 @@ class Money implements JsonSerializable, Stringable
     {
         $scale ??= $this->scale;
 
+        // Integers are converted losslessly; a float cast would corrupt values above 2^53.
+        if (is_int($amount)) {
+            $amount = (string)$amount;
+        }
+
+        if (is_float($amount) && !is_finite($amount)) {
+            throw new InvalidArgumentException('Amount must be a finite number.');
+        }
+
         if (is_string($amount)) {
             $amount = trim($amount);
             if (!is_numeric($amount)) {
@@ -547,7 +559,7 @@ class Money implements JsonSerializable, Stringable
             return $this->bcRound($amount, $scale);
         }
 
-        $formatted = number_format((float)$amount, $scale, '.', '');
+        $formatted = number_format($amount, $scale, '.', '');
 
         /** @var numeric-string $formatted */
         return $formatted;
