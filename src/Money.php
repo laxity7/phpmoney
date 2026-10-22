@@ -191,8 +191,10 @@ class Money implements JsonSerializable, Stringable
      */
     final public function multiply(int|float|string $multiplier, int $roundingMode = self::ROUND_HALF_UP): self
     {
-        $scale = max($this->scale, self::SCALE);
-        $value = bcmul($this->amount, $this->format($multiplier, $scale), $scale + 1);
+        $formattedMultiplier = $this->format($multiplier, max($this->scale, self::SCALE));
+        // Exact product: rounding must see every digit, otherwise a tail beyond the working scale
+        // can turn "just above half" into an exact half.
+        $value = bcmul($this->amount, $formattedMultiplier, $this->scale + $this->fractionLength($formattedMultiplier));
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -215,7 +217,8 @@ class Money implements JsonSerializable, Stringable
             throw new InvalidArgumentException('Division by zero.');
         }
 
-        $value = bcdiv($this->amount, $formattedDivisor, $scale + 1);
+        $value = bcdiv($this->amount, $formattedDivisor, $this->scale + 1);
+        $value = $this->markInexactQuotient($value, $formattedDivisor);
         $value = $this->round($value, $roundingMode);
 
         return $this->newInstance($value);
@@ -419,10 +422,7 @@ class Money implements JsonSerializable, Stringable
      */
     private function bcRound(string $number, int $scale): string
     {
-        $dotPos = strpos($number, '.');
-        $fractionalLength = $dotPos !== false ? strlen($number) - $dotPos - 1 : 0;
-
-        if ($fractionalLength <= $scale) {
+        if ($this->fractionLength($number) <= $scale) {
             /** @var numeric-string */
             return bcadd($number, '0', $scale);
         }
@@ -442,8 +442,9 @@ class Money implements JsonSerializable, Stringable
     /**
      * Rounds a numeric string to the currency scale using the given mode (BCMath-safe, no float cast).
      *
-     * Both modes round to the nearest unit of the currency scale; they differ only on an exact
-     * half: ROUND_HALF_UP rounds away from zero, ROUND_HALF_DOWN rounds toward zero.
+     * Rounding is decided on the whole dropped tail: the value is compared with an exact half of one unit
+     * at the target scale. Both modes round to the nearest unit; they differ only on an exact half:
+     * ROUND_HALF_UP rounds away from zero, ROUND_HALF_DOWN rounds toward zero (symmetric for negatives).
      *
      * @param numeric-string $value
      * @param self::ROUND_HALF_UP|self::ROUND_HALF_DOWN $roundingMode
@@ -451,15 +452,17 @@ class Money implements JsonSerializable, Stringable
      */
     private function round(string $value, int $roundingMode): string
     {
+        $valueScale = max($this->fractionLength($value), $this->scale + 1);
+
         // Truncate toward zero at the target scale; the remainder is the part beyond it.
         $truncated = bcadd($value, '0', $this->scale);
-        $remainder = bcsub($value, $truncated, self::SCALE + 2);
+        $remainder = bcsub($value, $truncated, $valueScale);
 
         // Half of one unit at the target scale (e.g. "0.005" for scale 2, "0.5" for scale 0).
         /** @var numeric-string $half */
         $half = '0.' . str_repeat('0', $this->scale) . '5'; // @phpstan-ignore varTag.nativeType
 
-        $cmp = bccomp(ltrim($remainder, '-'), $half, self::SCALE + 2);
+        $cmp = bccomp(ltrim($remainder, '-'), $half, $valueScale);
         $roundAwayFromZero = $cmp === 1 || ($cmp === 0 && $roundingMode === self::ROUND_HALF_UP);
 
         if ($roundAwayFromZero) {
@@ -472,6 +475,49 @@ class Money implements JsonSerializable, Stringable
 
         /** @var numeric-string */
         return $truncated;
+    }
+
+    /**
+     * bcdiv() truncates, so a quotient cut at scale+1 digits may look like an exact half while the real
+     * quotient is slightly larger in magnitude. If the division is not exact, appends a sticky digit
+     * one place further so the tail is never mistaken for zero.
+     *
+     * @param numeric-string $quotient Quotient truncated at scale+1 digits
+     * @param numeric-string $divisor
+     * @return numeric-string
+     */
+    private function markInexactQuotient(string $quotient, string $divisor): string
+    {
+        $checkScale = $this->scale + 1 + $this->fractionLength($divisor);
+        $restored = bcmul($quotient, $divisor, $checkScale);
+
+        if (bccomp($restored, $this->amount, $checkScale) === 0) {
+            return $quotient;
+        }
+
+        // Value is not representable in scale+1 digits: the true tail is non-zero.
+        /** @var numeric-string $sticky */
+        $sticky = '0.' . str_repeat('0', $this->scale + 1) . '1'; // @phpstan-ignore varTag.nativeType
+
+        /** @var numeric-string */
+        return $this->isSignDifferent($divisor)
+            ? bcsub($quotient, $sticky, $this->scale + 2)
+            : bcadd($quotient, $sticky, $this->scale + 2);
+    }
+
+    /**
+     * @param numeric-string $divisor
+     */
+    private function isSignDifferent(string $divisor): bool
+    {
+        return $divisor[0] === '-' xor $this->amount[0] === '-';
+    }
+
+    private function fractionLength(string $number): int
+    {
+        $dotPos = strpos($number, '.');
+
+        return $dotPos === false ? 0 : strlen($number) - $dotPos - 1;
     }
 
     /**
@@ -493,9 +539,9 @@ class Money implements JsonSerializable, Stringable
                 throw new InvalidArgumentException('Amount must be numeric.');
             }
 
-            // Handle scientific notation in string form (e.g., "1.5E+10")
+            // Handle scientific notation in string form (e.g., "1.5E+10") without a float round trip
             if (stripos($amount, 'e') !== false) {
-                $amount = number_format((float)$amount, self::SCALE, '.', '');
+                $amount = $this->expandExponent($amount);
             }
 
             return $this->bcRound($amount, $scale);
@@ -505,6 +551,45 @@ class Money implements JsonSerializable, Stringable
 
         /** @var numeric-string $formatted */
         return $formatted;
+    }
+
+    /**
+     * Converts a numeric string in scientific notation to plain decimal notation using string shifts only.
+     *
+     * @return numeric-string
+     */
+    private function expandExponent(string $number): string
+    {
+        [$mantissa, $exponent] = explode('e', strtolower($number), 2);
+        $exponent = (int)$exponent;
+
+        $sign = '';
+        if ($mantissa !== '' && ($mantissa[0] === '-' || $mantissa[0] === '+')) {
+            $sign = $mantissa[0] === '-' ? '-' : '';
+            $mantissa = substr($mantissa, 1);
+        }
+
+        $parts = explode('.', $mantissa, 2);
+        $digits = $parts[0] . ($parts[1] ?? '');
+        $pointPos = strlen($parts[0]) + $exponent;
+
+        if ($pointPos <= 0) {
+            $result = '0.' . str_repeat('0', -$pointPos) . $digits;
+        } elseif ($pointPos >= strlen($digits)) {
+            $result = $digits . str_repeat('0', $pointPos - strlen($digits));
+        } else {
+            $result = substr($digits, 0, $pointPos) . '.' . substr($digits, $pointPos);
+        }
+
+        $result = ltrim($result, '0');
+        if ($result === '' || $result[0] === '.') {
+            $result = '0' . $result;
+        }
+
+        /** @var numeric-string $numeric */
+        $numeric = $sign . $result; // @phpstan-ignore varTag.nativeType
+
+        return $numeric;
     }
 
     /**
